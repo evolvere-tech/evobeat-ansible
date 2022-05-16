@@ -1,0 +1,23 @@
+- name: evobeat test
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Test Collector
+      evobeat:
+        name: 'steve'
+        mode: 'test'
+        elastic_host: 'elastic.default.192.168.10.120.nip.io'
+        elastic_index: 'test-evobeat'
+        elastic_username: 'evolvere'
+        elastic_password: 'evolvere'
+        collector_module: 'test_collector'
+        hostip: '{{ ansible_host }}'
+        hostname: '{{ inventory_hostname }}'
+        username: 'admin'
+        password: 'admin'
+      register: result
+      #no_log: true
+
+    - name : Print result
+      debug:
+        msg: "{{ result }}"
