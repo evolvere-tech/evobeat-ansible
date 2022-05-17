@@ -36,20 +36,6 @@ class basebeat(object):
         self.elastic_index = self.config_data['elastic_index']
         self.elastic_username = self.config_data['elastic_username']
         self.elastic_password = self.config_data['elastic_password']
-        # Load the collector module
-        #collector_module_name = self.config_data['collector_module']
-        #collector_module_path = collector_module_name + '.py'
-        # Get the module spec
-        #collector_module_spec = importlib.util.spec_from_file_location(collector_module_name, collector_module_path)
-        # Create module from spec
-        #self.collector_module = importlib.util.module_from_spec(collector_module_spec)
-        # Load the module
-        #collector_module_spec.loader.exec_module(self.collector_module)
-        # Test for collect_data() function in collector_module
-        #if not hasattr(self.collector_module, 'collect_data'):
-        #self.collector_module = importlib.import_module("ansible.module_utils.collector.collect_data")
-        #    sys.exit(f'ERROR: Module {collector_module_name} doe not have collect_data() function')
-
         # Optional parameters
         # elastic_port defaults to 443
         self.elastic_port = self.config_data["elastic_port"]
@@ -66,8 +52,6 @@ class basebeat(object):
             self.interval = self.config_data['interval']
         else:
             self.interval = 60
-        # Set base parameters
-        self.started = False
         # Create elastic session
         self.es = Elasticsearch(
                         self.elastic_host,
@@ -143,7 +127,7 @@ class basebeat(object):
                 rc = 0
                 retry = 0
             except Exception as error:
-                self.logger.error(str(error))
+                self.msgs.append(str(error))
                 rc = 1
                 retry -= 1
                 if retry:
@@ -153,43 +137,3 @@ class basebeat(object):
         # Empty list of collected docs
         self.elastic_docs = []
         return {'rc': rc}
-
-    def run(self):
-        f_name = sys._getframe().f_code.co_name
-        # POST when time is a multiple of interval.
-        # Collect data ahead of the POST time (processing_time)
-        self.started = True
-        processing_time = 5
-        # wait_time = self.interval - processing_time
-        # Calculate seconds to wait to run first collection
-        time_now = time.time()
-        seconds_until_post = self.interval - (time_now % self.interval)
-        seconds_until_collect = seconds_until_post - processing_time
-        post_time = time_now + seconds_until_post
-        collect_time = datetime.datetime.fromtimestamp(time_now + seconds_until_collect)
-        msg = f'{f_name}: Starting at {collect_time}.'
-        self.logger.info(msg)
-        # Wait for first collection.
-        if seconds_until_collect > 0:
-            time.sleep(seconds_until_collect)
-        while True:
-            start_collect_time = time.time()
-            # Run the collector module, collect_data() function.
-            self.elastic_docs = collect_data(self.config_data)
-            actual_processing_time = time.time() - start_collect_time
-            time_now = time.time()
-            seconds_until_post = post_time - time_now
-            if seconds_until_post > 0:
-                time.sleep(seconds_until_post)
-            self.post()
-            # Calculate next collect time.
-            time_now = int(time.time())
-            seconds_until_post = self.interval - (time_now % self.interval)
-            seconds_until_collect = seconds_until_post - processing_time
-            post_time = time_now + seconds_until_post
-            if seconds_until_collect > 0:
-                minutes_to_sleep, seconds_to_sleep = divmod((seconds_until_collect), 60)
-                msg = f'{f_name}: Time to collect data: {actual_processing_time:.2f}, ' + \
-                      f'sleeping for {minutes_to_sleep} minutes {seconds_to_sleep} seconds.'
-                self.logger.info(msg)
-                time.sleep(seconds_until_collect)
