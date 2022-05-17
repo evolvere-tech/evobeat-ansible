@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 # collect_data() must return a list of documents (dictionaries) to be posted to elastic.
 def collect_data(config_data):
     docs = []
-    doc = {'beat': config_data.get('beat_name'), 'inventory_hostname': config_data.get('hostname')}
+    doc = {'beat': config_data.get('name'), 'inventory_hostname': config_data.get('hostname')}
     docs.append(doc)
     logger.info(f"docs: {docs}")
     return docs

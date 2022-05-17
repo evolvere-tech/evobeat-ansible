@@ -27,61 +27,38 @@ class basebeat(object):
         self.debug = False
         self.config_data = {}
         if kwargs:
-            self.name = kwargs['name']
-            self.mode = kwargs['mode']
             self.config_data = kwargs['config_data']
-        if True:
-            # Copy name to config_data to make available to plugin modules
-            self.config_data['beat_name'] = self.name
-            # Mandatory parameters
-            self.elastic_host = self.config_data['elastic_host']
-            self.elastic_index = self.config_data['elastic_index']
-            self.elastic_username = self.config_data['elastic_username']
-            self.elastic_password = self.config_data['elastic_password']
-            # Load the collector module
-            #collector_module_name = self.config_data['collector_module']
-            #collector_module_path = collector_module_name + '.py'
-            # Get the module spec
-            #collector_module_spec = importlib.util.spec_from_file_location(collector_module_name, collector_module_path)
-            # Create module from spec
-            #self.collector_module = importlib.util.module_from_spec(collector_module_spec)
-            # Load the module
-            #collector_module_spec.loader.exec_module(self.collector_module)
-            # Test for collect_data() function in collector_module
-            #if not hasattr(self.collector_module, 'collect_data'):
-            #self.collector_module = importlib.import_module("ansible.module_utils.test_collector")
-            #    sys.exit(f'ERROR: Module {collector_module_name} doe not have collect_data() function')
+            self.name = self.config_data['name']
+            self.mode = self.config_data['mode']
+
+        # Mandatory parameters
+        self.elastic_host = self.config_data['elastic_host']
+        self.elastic_index = self.config_data['elastic_index']
+        self.elastic_username = self.config_data['elastic_username']
+        self.elastic_password = self.config_data['elastic_password']
+        # Load the collector module
+        #collector_module_name = self.config_data['collector_module']
+        #collector_module_path = collector_module_name + '.py'
+        # Get the module spec
+        #collector_module_spec = importlib.util.spec_from_file_location(collector_module_name, collector_module_path)
+        # Create module from spec
+        #self.collector_module = importlib.util.module_from_spec(collector_module_spec)
+        # Load the module
+        #collector_module_spec.loader.exec_module(self.collector_module)
+        # Test for collect_data() function in collector_module
+        #if not hasattr(self.collector_module, 'collect_data'):
+        #self.collector_module = importlib.import_module("ansible.module_utils.collector.collect_data")
+        #    sys.exit(f'ERROR: Module {collector_module_name} doe not have collect_data() function')
 
         # Optional parameters
         # elastic_port defaults to 443
-        if 'elastic_port' in self.config_data:
-            if self.config_data['elastic_port'] in range(1, 49151):
-                self.elastic_port =  self.config_data['elastic_port']
-            else:
-                sys.exit('ERROR: elastic_port must be integer in range 1 - 49151.')
-        else:
-            self.elastic_port = 443
+        self.elastic_port = self.config_data["elastic_port"]
         # elastic_scheme defaults to 'https'
-        if 'elastic_scheme' in self.config_data:
-            if self.config_data['elastic_scheme'] in ['http', 'HTTP', 'https', 'HTTPS']:
-                self.elastic_scheme =  self.config_data['elastic_scheme']
-            else:
-                sys.exit('ERROR: elastic_scheme must be "http" or "https".')
-        else:
-            self.elastic_scheme = 'https'
+        self.elastic_scheme = self.config_data["elastic_scheme"]
         # elastic_verify_certs defaults to False
-        if 'elastic_verify_certs' in self.config_data:
-            if isinstance(self.config_data['elastic_verify_certs'], bool):
-                self.elastic_verify_certs = self.config_data['elastic_verify_certs']
-            else:
-                sys.exit('ERROR: elastic_verify_certs must be True or False.')
-        else:
-            self.elastic_verify_certs = False
+        self.elastic_verify_certs = self.config_data["elastic_verify_certs"]
         # elastic_index_rotate defaults to 'daily'
-        if 'elastic_index_rotate' in self.config_data:
-            self.elastic_index_rotate = self.config_data['elastic_index_rotate']
-        else:
-            self.elastic_index_rotate = 'daily'   
+        self.elastic_index_rotate = self.config_data["elastic_index_rotate"]
         # interval defaults to 30 seconds
         if 'interval' in self.config_data:
             if self.config_data['interval'] < 30:
@@ -89,42 +66,8 @@ class basebeat(object):
             self.interval = self.config_data['interval']
         else:
             self.interval = 60
-        # log_file defaults to logs/{name}.log
-        if 'log_file' in self.config_data:
-            log_file = self.config_data['log_file']
-        else:
-            log_file = self.path + '/logs/' + self.name + '.log'
-        # Check for collector_vault_path
-        if 'collector_vault_path' in self.config_data:
-            self.collector_vault_path = self.config_data['collector_vault_path']
-        else:
-            self.collector_vault_path = None
-        try:
-            self.logger = logging.getLogger(self.name)
-            self.logger.setLevel(logging.DEBUG)
-            # log_file can be set to "stdout" to stream output
-            if log_file == 'stdout':
-                handler = StreamHandler(sys.stdout)
-                formatter = logging.Formatter('%(levelname)s: %(message)s')
-            else:
-                handler = RotatingFileHandler(log_file, maxBytes=50*1024*1024, backupCount=1)
-                formatter = logging.Formatter('%(asctime)s: %(levelname)s: %(message)s')
-            handler.setLevel(logging.DEBUG)
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-        except Exception as error:
-            sys.exit('ERROR: Failed to open log file {}.'.format(log_file))
         # Set base parameters
         self.started = False
-        # Declare vault client and secrets
-        self.vault_client = None
-        self.vault_secrets = None
-        self.collector_vault_secrets = None
-        # Copy secrets to config_data to make available to plugin modules
-        self.config_data['secrets'] = None
-        self.config_data['collector_secrets'] = None
-        # Get secrets from Vault
-        #self.get_vault_credentials()
         # Create elastic session
         self.es = Elasticsearch(
                         self.elastic_host,
@@ -136,14 +79,15 @@ class basebeat(object):
                         request_timeout=10
                             )
         # Test connection to elastic
-        self.logger.info(f'Testing connection to elasticsearch ...')      
-        self.logger.info(f'host:{self.elastic_host} port:{self.elastic_port} scheme:{self.elastic_scheme}.')
+        self.msgs.append(f'INFO: Testing connection to elasticsearch ...')      
+        self.msgs.append(f'INFO: host:{self.elastic_host} port:{self.elastic_port} scheme:{self.elastic_scheme}.')
         if not self.es.ping(request_timeout=1):
             if self.mode == "test":
-                self.logger.warning('Connection to elasticsearch failed.')
+                self.msgs.append('WARNING: Connection to elasticsearch failed.')
             else:
-                self.logger.error('Connection to elasticsearch failed.')
-                sys.exit()
+                self.msgs.append('ERROR: Connection to elasticsearch failed.')
+        else:
+            self.msgs.append('INFO: Connection successful.')
         # Disable certificate warnings
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         urllib3.disable_warnings(urllib3.exceptions.InsecurePlatformWarning)
@@ -151,7 +95,7 @@ class basebeat(object):
 
     def __del__(self):
         try:
-            self.logger.info('Stopped.')
+            self.msgs.append('Stopped.')
         except:
             pass
 
@@ -160,14 +104,15 @@ class basebeat(object):
         # "mode" is either "run" or "test"
         if self.mode == "test":
             msg = f'WARNING: {f_name}: POST not allowed in test mode.'
-            self.logger.warning(msg)
+            self.msgs.append(msg)
             return {'rc': 1}
         if self.elastic_index_rotate == 'daily':
             index_suffix = '%Y-%m-%d'
         elif self.elastic_index_rotate == 'monthly':
             index_suffix = '%Y-%m'
         else:
-            msg = f'{f_name}: Invalid index_rotate value {self.elastic_index_rotate}'
+            msg = f'ERROR: {f_name}: Invalid index_rotate value {self.elastic_index_rotate}'
+            self.msgs.append(msg)
             return {'rc': 1}
         es_index = self.elastic_index + '-' + datetime.datetime.now().strftime(index_suffix)
         doc_header = {
@@ -187,14 +132,14 @@ class basebeat(object):
                 doc['@timestamp'] = utc_dt.isoformat()
         # POST to elastic.
         if self.debug:
-            msg = f'{f_name}: POSTing to index {es_index}'
-            self.logger.debug(msg)
+            msg = f'DEBUG: {f_name}: POSTing to index {es_index}'
+            self.msgs.append(msg)
         retry = 2
         while retry:
             try:
                 bulk_results = helpers.bulk(self.es, self.elastic_docs)
-                msg = f'{f_name}: {bulk_results[0]} documents POSTed successfully.'
-                self.logger.info(msg)
+                msg = f'INFO: {f_name}: {bulk_results[0]} documents POSTed successfully.'
+                self.msgs.append(msg)
                 rc = 0
                 retry = 0
             except Exception as error:
@@ -203,8 +148,8 @@ class basebeat(object):
                 retry -= 1
                 if retry:
                     time.sleep(2)
-                    msg = f'{f_name}: POST failed, retrying.'
-                    self.logger.info(msg)
+                    msg = f'ERROR: {f_name}: POST failed, retrying.'
+                    self.msgs.append(msg)
         # Empty list of collected docs
         self.elastic_docs = []
         return {'rc': rc}
