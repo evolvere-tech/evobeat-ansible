@@ -15,6 +15,7 @@ module_args = {
     "elastic_verify_certs": {"required": False, "type": "str"},
     "elastic_index_rotate": {"required": False, "type": "str"},
     "interval": {"required": False, "type": "str"},
+    "debug": {"required": False, "type": "bool"},
     "hostname": {"required": True, "type": "str"},
     "hostip": {"required": True, "type": "str"},
     "username": {"required": True, "type": "str"},
@@ -38,6 +39,8 @@ config_data = {}
 # Mandatory parameters
 config_data["name"] = module.params["name"]
 config_data["mode"] = module.params["mode"]
+if config_data["mode"] not in ['test', 'run']:
+    errors.append('ERROR: mode must be "test" or "run".')
 config_data["elastic_host"] = module.params["elastic_host"]
 config_data["elastic_index"] = module.params["elastic_index"] 
 config_data["elastic_username"] = module.params["elastic_username"]
@@ -81,6 +84,10 @@ if module.params["interval"]:
         errors.append('ERROR: interval (seconds) must be >= 30')
     else:
         config_data["interval"] = module.params["interval"]
+# debug defaults to False
+config_data["debug"] = False
+if module.params["debug"]:
+    config_data["debug"] = True
 # Inventory parameters
 config_data["hostname"] = module.params["hostname"]   # inventory_hostname
 config_data["hostip"] = module.params["hostip"]       # ansible_host
@@ -92,8 +99,28 @@ if errors:
     module.fail_json(msg=f'Invalid module parameters.', **result)
     
 beat = basebeat(name=config_data["name"], mode=config_data["mode"], config_data=config_data)
-elastic_docs = collect_data(config_data)
-
-result["elastic_docs"] = elastic_docs
-result["messages"] = beat.msgs
-module.exit_json(**result)
+evobeat_result = collect_data(config_data)
+# Test mode
+error_flag = False
+if config_data["mode"] == 'test':
+    result["elastic_docs"] = evobeat_result["elastic_docs"]
+    result["messages"] = beat.msgs
+    for msg in beat.msgs:
+        if 'ERROR:' or 'WARNING:' in msg:
+            error_flag = True
+    if error_flag:
+        module.fail_json(msg=f'Test failed.', **result)
+    else:
+        module.exit_json(**result)
+# Run mode
+else:
+    beat.elastic_docs = evobeat_result["elastic_docs"]
+    post_result = beat.post()
+    result["elastic_docs"] = evobeat_result["elastic_docs"]
+    result["messages"] = beat.msgs
+    if config_data["debug"]:
+        result["debug"] = evobeat_result["debug_msgs"]
+    if post_result["rc"]:
+        module.fail_json(msg=f'POST to elastic failed.', **result)
+    else:
+        module.exit_json(**result)

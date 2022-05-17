@@ -5,17 +5,16 @@
     - name: Test Collector
       evobeat:
         name: 'steve'
-        mode: 'run'
-        elastic_host: 'elastic.default.192.168.10.120.nip.io'
+        mode: 'test'
+        elastic_host: 'elastic.default.192.168.10.8.nip.io'
         elastic_index: 'test-evobeat'
         elastic_username: 'evolvere'
         elastic_password: 'evolvere'
-        operation: 'reachability'
+        operation: 'test_collector'
         hostip: '{{ ansible_host }}'
         hostname: '{{ inventory_hostname }}'
         username: 'admin'
         password: 'admin'
-        debug: True
       register: result
       #no_log: true
 
