@@ -28,7 +28,6 @@ class basebeat(object):
         self.config_data = {}
         if kwargs:
             self.config_data = kwargs['config_data']
-            self.name = self.config_data['name']
             self.mode = self.config_data['mode']
 
         # Mandatory parameters
@@ -43,6 +42,8 @@ class basebeat(object):
         self.elastic_scheme = self.config_data["elastic_scheme"]
         # elastic_verify_certs defaults to False
         self.elastic_verify_certs = self.config_data["elastic_verify_certs"]
+        # elastic_ca_cert defaults to ''
+        self.elastic_ca_cert = self.config_data["elastic_ca_cert"]
         # elastic_index_rotate defaults to 'daily'
         self.elastic_index_rotate = self.config_data["elastic_index_rotate"]
         # interval defaults to 30 seconds
@@ -58,7 +59,8 @@ class basebeat(object):
                         http_auth=(self.elastic_username,self.elastic_password),
                         port=self.elastic_port,
                         scheme=self.elastic_scheme,
-                        verify_certs=False,
+                        verify_certs=self.elastic_verify_certs,
+                        ca_cert=self.elastic_ca_cert,
                         connection_class=RequestsHttpConnection,
                         request_timeout=10
                             )

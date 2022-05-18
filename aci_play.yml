@@ -9,12 +9,11 @@
         elastic_index: 'test-evobeat'
         elastic_username: 'evolvere'
         elastic_password: 'evolvere'
-        elastic_verify_certs: False
-        operation: 'reachability'
+        operation: 'aci'
         hostip: '{{ ansible_host }}'
         hostname: '{{ inventory_hostname }}'
-        username: 'admin'
-        password: 'admin'
+        username: '{{ ansible_user }}'
+        password: '{{ ansible_password }}'
         debug: True
       register: result
       #no_log: true

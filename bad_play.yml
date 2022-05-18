@@ -4,7 +4,6 @@
   tasks:
     - name: Test Collector
       evobeat:
-        name: 'steve'
         mode: 'test'
         elastic_host: 'elastic.default.192.168.10.8.nip.io'
         elastic_index: 'test-evobeat'

@@ -1,9 +1,49 @@
+# Copyright: (c) 2022, steve@evolvere-tech.co.uk
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+from __future__ import (absolute_import, division, print_function)
+__metaclass__ = type
+
+DOCUMENTATION = r'''
+---
+module: evobeat
+
+short_description: Framework to simplify posting telemetry data to Elastic.
+
+version_added: "1.0.0"
+
+description: Add custom functions to module_utils/collector.py and run them using Ansible.
+
+options:
+    mode:
+        description: Can be 'test' or 'run'. Use test mode to verify custom code without posting to elastic.
+        required: true
+        type: str
+    
+    elastic_host:
+        description: Name or IP address of elastic cluster.
+        required: true
+        type: str
+        
+    elastic_index:
+        description: Prefix for elastic index name where data will be posted.
+        required: true
+        type: str
+        
+    elastic_username:
+        description: Username credential for elastic cluster.
+        required: true
+        type: str
+        
+author:
+    - Steve Corp (@beertwanger)
+'''
+
+import os
 from ansible.module_utils.evobeatd import basebeat, collect_data
 from ansible.module_utils.basic import *
 
 # Define module args
 module_args = {
-    "name": {"required": True, "type": "str"},
     "mode": {"required": True, "type": "str"},
     "elastic_host": {"required": True, "type": "str"},
     "elastic_index": {"required": True, "type": "str"},
@@ -12,9 +52,10 @@ module_args = {
     "operation": {"required": True, "type": "str"},
     "elastic_port": {"required": False, "type": "int"},
     "elastic_scheme": {"required": False, "type": "str"},
-    "elastic_verify_certs": {"required": False, "type": "str"},
+    "elastic_verify_certs": {"required": False, "type": "bool"},
+    "elastic_ca_cert": {"required": False, "type": "str"},
     "elastic_index_rotate": {"required": False, "type": "str"},
-    "interval": {"required": False, "type": "str"},
+    "interval": {"required": False, "type": "int"},
     "debug": {"required": False, "type": "bool"},
     "hostname": {"required": True, "type": "str"},
     "hostip": {"required": True, "type": "str"},
@@ -37,7 +78,6 @@ errors = []
 module = AnsibleModule(argument_spec=module_args)
 config_data = {}
 # Mandatory parameters
-config_data["name"] = module.params["name"]
 config_data["mode"] = module.params["mode"]
 if config_data["mode"] not in ['test', 'run']:
     errors.append('ERROR: mode must be "test" or "run".')
@@ -64,10 +104,14 @@ if module.params["elastic_scheme"]:
 # elastic_verify_certs options are False (default) or True
 config_data["elastic_verify_certs"] = False
 if module.params["elastic_verify_certs"]:
-    if isinstance(module.params["elastic_verify_certs"], bool):
-        config_data["elastic_verify_certs"] = module.params["elastic_verify_certs"]
+    config_data["elastic_verify_certs"] = module.params["elastic_verify_certs"]
+# elastic_ca_cert defaults to ''
+config_data["elastic_ca_cert"] = ''
+if module.params["elastic_ca_cert"]:
+    if os.path.exists(module.params["elastic_ca_cert"]):
+        config_data["elastic_ca_cert"] = module.params["elastic_ca_cert"]
     else:
-        errors.append('ERROR: elastic_verify_certs must be True or False.')
+        errors.append(f'ERROR: ca cert file {module.params["elastic_ca_cert"]} not found.')
 # elastic_index_rotate options are 'daily' (default) or 'monthly'
 config_data["elastic_index_rotate"] = 'daily'
 if module.params["elastic_index_rotate"]:
@@ -78,9 +122,7 @@ if module.params["elastic_index_rotate"]:
 # interval defaults to 30 seconds
 config_data["interval"] = 30
 if module.params["interval"]:
-    if not isinstance(module.params["interval"], int):
-        errors.append('ERROR: interval (seconds) must be an integer >= 30')
-    elif module.params["interval"] < 30:
+    if module.params["interval"] < 30:
         errors.append('ERROR: interval (seconds) must be >= 30')
     else:
         config_data["interval"] = module.params["interval"]
@@ -98,7 +140,7 @@ if errors:
     result["errors"] = errors
     module.fail_json(msg=f'Invalid module parameters.', **result)
     
-beat = basebeat(name=config_data["name"], mode=config_data["mode"], config_data=config_data)
+beat = basebeat(mode=config_data["mode"], config_data=config_data)
 evobeat_result = collect_data(config_data)
 # Test mode
 error_flag = False
@@ -106,7 +148,7 @@ if config_data["mode"] == 'test':
     result["elastic_docs"] = evobeat_result["elastic_docs"]
     result["messages"] = beat.msgs
     for msg in beat.msgs:
-        if 'ERROR:' or 'WARNING:' in msg:
+        if 'ERROR:' in msg:
             error_flag = True
     if error_flag:
         module.fail_json(msg=f'Test failed.', **result)
