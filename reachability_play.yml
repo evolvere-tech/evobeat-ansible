@@ -1,10 +1,10 @@
-- name: evobeat test
+- name: evobeat data collector
   hosts: all
   gather_facts: no
   tasks:
-    - name: Test Collector
+    - name: Test IP and SSH connectivity
       evobeat:
-        mode: 'run'
+        mode: 'test'
         elastic_host: 'elastic.default.192.168.10.120.nip.io'
         elastic_index: 'test-evobeat'
         elastic_username: 'evolvere'

@@ -14,7 +14,7 @@ from elasticsearch import Elasticsearch, helpers, RequestsHttpConnection
 from pprint import pprint
 from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
-from ansible.module_utils.collector import collect_data
+#from ansible.module_utils.collector import collect_data
 
 
 class basebeat(object):

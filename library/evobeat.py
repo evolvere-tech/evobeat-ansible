@@ -39,7 +39,8 @@ author:
 '''
 
 import os
-from ansible.module_utils.evobeatd import basebeat, collect_data
+from ansible.module_utils.evobeatd import basebeat
+from ansible.module_utils.collector import collect_data
 from ansible.module_utils.basic import *
 
 # Define module args
