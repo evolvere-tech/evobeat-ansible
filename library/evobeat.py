@@ -56,6 +56,8 @@ module_args = {
     "elastic_verify_certs": {"required": False, "type": "bool"},
     "elastic_ca_cert": {"required": False, "type": "str"},
     "elastic_index_rotate": {"required": False, "type": "str"},
+    "non_timeseries": {"required": False, "type": "bool"},
+    "key_field": {"required": False, "type": "str"},
     "interval": {"required": False, "type": "int"},
     "debug": {"required": False, "type": "bool"},
     "hostname": {"required": True, "type": "str"},
@@ -120,6 +122,18 @@ if module.params["elastic_index_rotate"]:
         config_data["elastic_index_rotate"] = config_data["elastic_index_rotate"]
     else:
         errors.append('ERROR: elastic_index_rotate must be "daily" or "monthly".')
+# non_timeseries defaults to False
+config_data["non_timeseries"] = False
+if module.params["non_timeseries"]:
+    config_data["non_timeseries"] = module.params["non_timeseries"]
+# key_field defaults to ''
+config_data["key_field"] = ''
+if module.params["key_field"]:
+    config_data["key_field"] = module.params["key_field"]
+# non_timeseries requires key_field
+if config_data["non_timeseries"]:
+    if not config_data["key_field"]:
+        errors.append('ERROR: key_field required for non_timeseries data.')
 # interval defaults to 30 seconds
 config_data["interval"] = 30
 if module.params["interval"]:

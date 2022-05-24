@@ -1,5 +1,6 @@
 from ansible.module_utils.reachability_collector import reachability
 from ansible.module_utils.aci_collector import aci
+from ansible.module_utils.inventory_collector import inventory
 from pprint import pprint
 
 # collector functions must return a dictionary with keys elastic_docs and debug_msgs
@@ -10,8 +11,10 @@ def collect_data(config_data):
         result = reachability(config_data)
     elif config_data["operation"] == 'aci':
         result = aci(config_data)
+    elif config_data["operation"] == 'inventory':
+        result = inventory(config_data)
     else:
-        result = {'elastic_docs': [], 'debug_msgs': []}
+        result = {'elastic_docs': [], 'debug_msgs': ["ERROR: no valid operation specifiec."]}
     return result
 
 if __name__ == "__main__":
@@ -24,6 +27,6 @@ if __name__ == "__main__":
                    'hostip': '192.168.104.10',
                    'username': 'admin',
                    'password': 'f00tba11',
-                   'operation': 'aci'}
+                   'operation': 'inventory'}
     docs = collect_data(config_data)
     pprint(docs)

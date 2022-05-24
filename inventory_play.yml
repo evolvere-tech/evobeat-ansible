@@ -1,0 +1,25 @@
+- name: evobeat data collector
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Collect ACI size metrics
+      evobeat:
+        mode: 'run'
+        elastic_host: 'elastic.default.192.168.10.120.nip.io'
+        elastic_index: 'evobeat-inventory'
+        elastic_username: 'evolvere'
+        elastic_password: 'evolvere'
+        operation: 'inventory'
+        hostip: '{{ ansible_host }}'
+        hostname: '{{ inventory_hostname }}'
+        username: '{{ ansible_user }}'
+        password: '{{ ansible_password }}'
+        non_timeseries: True
+        key_field: 'device_name'
+        debug: True
+      register: result
+      #no_log: true
+
+    - name : Print result
+      debug:
+        msg: "{{ result }}"
