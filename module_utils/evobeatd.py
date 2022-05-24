@@ -65,7 +65,7 @@ class basebeat(object):
                         port=self.elastic_port,
                         scheme=self.elastic_scheme,
                         verify_certs=self.elastic_verify_certs,
-                        ca_cert=self.elastic_ca_cert,
+                        ca_certs=self.elastic_ca_cert,
                         connection_class=RequestsHttpConnection,
                         request_timeout=10
                             )
