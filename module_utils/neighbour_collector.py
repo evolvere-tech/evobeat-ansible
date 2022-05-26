@@ -12,6 +12,13 @@ def neighbour(config_data):
     device_ip = config_data["hostip"]
     user = config_data["username"]
     pwd = config_data["password"]
+    netmiko_device_type = config_data["device_type"]
+    if netmiko_device_type == 'cisco_ios':
+       neighbour_name_field = 'Device ID:'
+       mgmt_address_flag = 'Management address(es):'
+    elif netmiko_device_type == 'cisco_nxos':
+       neighbour_name_field = 'System Name:'
+
     # show cdp neighors
     # Here we need to track 'Mgmt address(es):' to select correct neighbour IP address.
     # Mgmt address(es):
@@ -27,7 +34,7 @@ def neighbour(config_data):
             doc['device_ip'] = device_ip
             doc['protocol'] = 'cdp'
             mgmt_interface = False
-        if 'System Name:' in line:
+        if neighbour_name_field in line:
             doc['neighbour'] = line.split()[2]
         if 'Mgmt address(es):' in line:
             mgmt_interface = True

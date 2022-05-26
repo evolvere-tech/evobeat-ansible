@@ -6,8 +6,8 @@ all:
       ansible_user: admin
       ansible_password: f00tba11
       ansible_connection: local
-    evo-nxos01
-      ansible_host: 10.9.100.64
+    evo-eos01:
+      ansible_host: 192.168.10.160
       ansible_user: admin
       ansible_password: admin
       ansible_connection: local

@@ -59,26 +59,27 @@ class basebeat(object):
         else:
             self.interval = 60
         # Create elastic session
-        self.es = Elasticsearch(
-                        self.elastic_host,
-                        http_auth=(self.elastic_username,self.elastic_password),
-                        port=self.elastic_port,
-                        scheme=self.elastic_scheme,
-                        verify_certs=self.elastic_verify_certs,
-                        ca_certs=self.elastic_ca_cert,
-                        connection_class=RequestsHttpConnection,
-                        request_timeout=10
-                            )
-        # Test connection to elastic
-        self.msgs.append(f'INFO: Testing connection to elasticsearch ...')      
-        self.msgs.append(f'INFO: host:{self.elastic_host} port:{self.elastic_port} scheme:{self.elastic_scheme}.')
-        if not self.es.ping(request_timeout=1):
-            if self.mode == "test":
-                self.msgs.append('WARNING: Connection to elasticsearch failed.')
+        if self.mode in ["test", "run", "post"]:
+            self.es = Elasticsearch(
+                            self.elastic_host,
+                            http_auth=(self.elastic_username,self.elastic_password),
+                            port=self.elastic_port,
+                            scheme=self.elastic_scheme,
+                            verify_certs=self.elastic_verify_certs,
+                            ca_certs=self.elastic_ca_cert,
+                            connection_class=RequestsHttpConnection,
+                            request_timeout=10
+                                )
+            # Test connection to elastic
+            self.msgs.append(f'INFO: Testing connection to elasticsearch ...')      
+            self.msgs.append(f'INFO: host:{self.elastic_host} port:{self.elastic_port} scheme:{self.elastic_scheme}.')
+            if not self.es.ping(request_timeout=1):
+                if self.mode == "test":
+                    self.msgs.append('WARNING: Connection to elasticsearch failed.')
+                else:
+                    self.msgs.append('ERROR: Connection to elasticsearch failed.')
             else:
-                self.msgs.append('ERROR: Connection to elasticsearch failed.')
-        else:
-            self.msgs.append('INFO: Connection successful.')
+                self.msgs.append('INFO: Connection successful.')
         # Disable certificate warnings
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         urllib3.disable_warnings(urllib3.exceptions.InsecurePlatformWarning)
@@ -90,11 +91,18 @@ class basebeat(object):
         except:
             pass
 
-    def post(self):
+    def post(self, docs={}):
+        # Process if docs passed as hostvars
+        msg = 'in post function.'
+        self.msgs.append(msg)
+        if docs:
+            self.elastic_docs = []
+            for key,value in docs.items():
+                self.elastic_docs.extend(value["result"]["elastic_docs"])          
         f_name = sys._getframe().f_code.co_name
-        # "mode" is either "run" or "test"
-        if self.mode == "test":
-            msg = f'WARNING: {f_name}: POST not allowed in test mode.'
+        # "mode" is either "test", "run", "collect" or "post"
+        if self.mode in ["test", "collect"]:
+            msg = f'WARNING: POST not allowed in {self.mode} mode.'
             self.msgs.append(msg)
             return {'rc': 1}
         if self.non_timeseries:

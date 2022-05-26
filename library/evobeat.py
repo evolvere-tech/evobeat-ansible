@@ -63,7 +63,8 @@ module_args = {
     "hostname": {"required": True, "type": "str"},
     "hostip": {"required": True, "type": "str"},
     "username": {"required": True, "type": "str"},
-    "password": {"required": True, "type": "str"}
+    "password": {"required": True, "type": "str"},
+    "hostvars": {"required": False, "type": "dict"}
 }
 
 # Initialise the result dictionary
@@ -82,8 +83,8 @@ module = AnsibleModule(argument_spec=module_args)
 config_data = {}
 # Mandatory parameters
 config_data["mode"] = module.params["mode"]
-if config_data["mode"] not in ['test', 'run']:
-    errors.append('ERROR: mode must be "test" or "run".')
+if config_data["mode"] not in ['test', 'run', 'collect', 'post']:
+    errors.append('ERROR: mode must be "test", "run", "collect" or "post.')
 config_data["elastic_host"] = module.params["elastic_host"]
 config_data["elastic_index"] = module.params["elastic_index"] 
 config_data["elastic_username"] = module.params["elastic_username"]
@@ -150,18 +151,24 @@ config_data["hostname"] = module.params["hostname"]   # inventory_hostname
 config_data["hostip"] = module.params["hostip"]       # ansible_host
 config_data["username"] = module.params["username"]   # ansible_user
 config_data["password"] = module.params["password"]   # ansible_password
+# hostvars
+config_data["hostvars"] = {}
+if module.params["hostvars"]: 
+    config_data["hostvars"] = module.params["hostvars"]
 
 if errors:
     result["errors"] = errors
     module.fail_json(msg=f'Invalid module parameters.', **result)
     
 beat = basebeat(mode=config_data["mode"], config_data=config_data)
-evobeat_result = collect_data(config_data)
-# Test mode
+if config_data["mode"] != 'post':
+    collect_result = collect_data(config_data)
+# Test or collect mode
 error_flag = False
-if config_data["mode"] == 'test':
-    result["elastic_docs"] = evobeat_result["elastic_docs"]
-    result["messages"] = beat.msgs
+if config_data["mode"] in ['test', 'collect']:
+    result["elastic_docs"] = collect_result["elastic_docs"]
+    if config_data["mode"] == 'test':
+        result["messages"] = beat.msgs
     for msg in beat.msgs:
         if 'ERROR:' in msg:
             error_flag = True
@@ -170,13 +177,21 @@ if config_data["mode"] == 'test':
     else:
         module.exit_json(**result)
 # Run mode
-else:
-    beat.elastic_docs = evobeat_result["elastic_docs"]
+elif config_data["mode"] == 'run':
+    beat.elastic_docs = collect_result["elastic_docs"]
     post_result = beat.post()
-    result["elastic_docs"] = evobeat_result["elastic_docs"]
+    result["elastic_docs"] = collect_result["elastic_docs"]
     result["messages"] = beat.msgs
     if config_data["debug"]:
-        result["debug"] = evobeat_result["debug_msgs"]
+        result["debug"] = collect_result["debug_msgs"]
+    if post_result["rc"]:
+        module.fail_json(msg=f'POST to elastic failed.', **result)
+    else:
+        module.exit_json(**result)
+# Post mode
+else:
+    post_result = beat.post(docs=config_data["hostvars"])
+    result["messages"] = beat.msgs
     if post_result["rc"]:
         module.fail_json(msg=f'POST to elastic failed.', **result)
     else:
