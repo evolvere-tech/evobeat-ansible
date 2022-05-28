@@ -93,12 +93,11 @@ class basebeat(object):
 
     def post(self, docs={}):
         # Process if docs passed as hostvars
-        msg = 'in post function.'
-        self.msgs.append(msg)
         if docs:
             self.elastic_docs = []
             for key,value in docs.items():
-                self.elastic_docs.extend(value["result"]["elastic_docs"])          
+                if 'result' in value.keys():
+                    self.elastic_docs.extend(value["result"]["elastic_docs"])    
         f_name = sys._getframe().f_code.co_name
         # "mode" is either "test", "run", "collect" or "post"
         if self.mode in ["test", "collect"]:
@@ -109,7 +108,7 @@ class basebeat(object):
             # POST non_timeseries data
             rc = 0
             for doc in self.elastic_docs:
-                query_body = {"query": {"bool": {"must": [{"query_string": {"query": f"{self.key_field}: {doc[self.key_field]}"}}]}}}
+                query_body = {"query": {"bool": {"must": [{"query_string": {"query": f"{self.key_field}.keyword: {doc[self.key_field]}"}}]}}}
                 try:
                     query = self.es.search(index=self.elastic_index, body=query_body)
                 except NotFoundError:
@@ -127,8 +126,14 @@ class basebeat(object):
                     except Exception as error:
                         msg = f'ERROR: POST failed with error {str(error)}'
                         self.msgs.append(msg)
-                    msg = f'INFO: Document POSTed with id {result["_id"]}, to index {self.elastic_index} '
+                    msg = f'INFO: Document POSTed with id {result["_id"]}, to index {self.elastic_index}.'
                     self.msgs.append(msg)
+                #else:
+                #    # Docs found, so update
+                #    doc_id = query["hits"]["hits"][0]["_id"]
+                #    result = self.es.index(index=self.elastic_index, id=doc_id, body=doc)
+                #    msg = f'INFO: Document with id {result["_id"]}, in index {self.elastic_index} updated.'
+                #    self.msgs.append(msg)
         else:
             # POST timeseries data
             if self.elastic_index_rotate == 'daily':

@@ -6,10 +6,20 @@ all:
       ansible_user: admin
       ansible_password: f00tba11
       ansible_connection: local
+      netmiko_device_type: unknown
+
     evo-eos01:
       ansible_host: 192.168.10.160
       ansible_user: admin
       ansible_password: admin
       ansible_connection: local
+      netmiko_device_type: arista_eos
+
+    #evo-eos02:
+    #  ansible_host: 192.168.10.189
+    #  ansible_user: admin
+    #  ansible_password: admin
+    #  ansible_connection: local
+    #  netmiko_device_type: arista_eos
   vars:
     ansible_python_interpreter: /home/evolvere/git-clone/evobeat-ansible/venv/bin/python3

@@ -1,39 +1,37 @@
 - name: evobeat data collector
-  hosts: all
+  hosts: evo-eos01
   gather_facts: no
   tasks:
-    - name: Collect inventory data
+    - name: Collect neighbour data
       evobeat:
         mode: 'collect'
         elastic_host: 'elastic.default.192.168.10.120.nip.io'
-        elastic_index: 'evobeat-inventory'
+        elastic_index: 'evobeat-neighbours'
         elastic_username: 'evolvere'
         elastic_password: 'evolvere'
-        operation: 'inventory'
+        operation: 'neighbour'
         hostip: '{{ ansible_host }}'
         hostname: '{{ inventory_hostname }}'
         username: '{{ ansible_user }}'
         password: '{{ ansible_password }}'
-        non_timeseries: True
-        key_field: 'device_name'
+        netmiko_device_type: '{{ netmiko_device_type }}'
+        hostvars: '{{ hostvars }}'
         debug: True
       register: result
       #no_log: true
 
-    - name: Post inventory data
+    - name: Post neighbour data
       evobeat:
         mode: 'post'
         elastic_host: 'elastic.default.192.168.10.120.nip.io'
-        elastic_index: 'evobeat-inventory'
+        elastic_index: 'evobeat-neighbours'
         elastic_username: 'evolvere'
         elastic_password: 'evolvere'
-        operation: 'inventory'
+        operation: 'neighbour'
         hostip: '{{ ansible_host }}'
         hostname: '{{ inventory_hostname }}'
         username: '{{ ansible_user }}'
         password: '{{ ansible_password }}'
-        non_timeseries: True
-        key_field: 'device_name'
         hostvars: '{{ hostvars }}'
         debug: True
       run_once: True

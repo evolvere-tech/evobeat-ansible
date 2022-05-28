@@ -1,6 +1,7 @@
 from ansible.module_utils.reachability_collector import reachability
 from ansible.module_utils.aci_collector import aci
 from ansible.module_utils.inventory_collector import inventory
+from ansible.module_utils.neighbour_collector import neighbour
 from pprint import pprint
 
 # collector functions must return a dictionary with keys elastic_docs and debug_msgs
@@ -13,6 +14,8 @@ def collect_data(config_data):
         result = aci(config_data)
     elif config_data["operation"] == 'inventory':
         result = inventory(config_data)
+    elif config_data["operation"] == 'neighbour':
+        result = neighbour(config_data)
     else:
         result = {'elastic_docs': [], 'debug_msgs': ["ERROR: no valid operation specifiec."]}
     return result

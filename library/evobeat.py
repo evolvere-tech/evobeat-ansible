@@ -64,7 +64,8 @@ module_args = {
     "hostip": {"required": True, "type": "str"},
     "username": {"required": True, "type": "str"},
     "password": {"required": True, "type": "str"},
-    "hostvars": {"required": False, "type": "dict"}
+    "hostvars": {"required": False, "type": "dict"},
+    "netmiko_device_type": {"required": False, "type": "str"}
 }
 
 # Initialise the result dictionary
@@ -155,6 +156,10 @@ config_data["password"] = module.params["password"]   # ansible_password
 config_data["hostvars"] = {}
 if module.params["hostvars"]: 
     config_data["hostvars"] = module.params["hostvars"]
+# netmiko_device_type
+config_data["netmiko_device_type"] = ''
+if module.params["netmiko_device_type"]: 
+    config_data["netmiko_device_type"] = module.params["netmiko_device_type"]
 
 if errors:
     result["errors"] = errors
