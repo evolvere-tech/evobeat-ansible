@@ -6,7 +6,7 @@
       evobeat:
         mode: 'collect'
         elastic_host: 'elastic.default.192.168.10.120.nip.io'
-        elastic_index: 'evobeat-neighbours'
+        elastic_index: 'evobeat-inventory-neighbours'
         elastic_username: 'evolvere'
         elastic_password: 'evolvere'
         operation: 'neighbour'
@@ -24,7 +24,7 @@
       evobeat:
         mode: 'post'
         elastic_host: 'elastic.default.192.168.10.120.nip.io'
-        elastic_index: 'evobeat-neighbours'
+        elastic_index: 'evobeat-inventory-neighbours'
         elastic_username: 'evolvere'
         elastic_password: 'evolvere'
         operation: 'neighbour'
@@ -32,6 +32,8 @@
         hostname: '{{ inventory_hostname }}'
         username: '{{ ansible_user }}'
         password: '{{ ansible_password }}'
+        non_timeseries: True
+        key_field: 'neighbour'
         hostvars: '{{ hostvars }}'
         debug: True
       run_once: True

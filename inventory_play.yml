@@ -14,6 +14,7 @@
         hostname: '{{ inventory_hostname }}'
         username: '{{ ansible_user }}'
         password: '{{ ansible_password }}'
+        netmiko_device_type: '{{ netmiko_device_type }}'
         non_timeseries: True
         key_field: 'device_name'
         debug: True
@@ -32,6 +33,7 @@
         hostname: '{{ inventory_hostname }}'
         username: '{{ ansible_user }}'
         password: '{{ ansible_password }}'
+        netmiko_device_type: '{{ netmiko_device_type }}'
         non_timeseries: True
         key_field: 'device_name'
         hostvars: '{{ hostvars }}'

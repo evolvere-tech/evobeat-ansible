@@ -10,6 +10,7 @@ from pprint import pprint
 def neighbour(config_data):
     docs = []
     msgs = []
+    doc_type = 'neighbour'
     known_device_types = ['cisco_ios', 'cisco_nxos', 'arista_eos']
     device_name = config_data["hostname"]
     device_ip = config_data["hostip"]
@@ -53,6 +54,7 @@ def neighbour(config_data):
     for line in output.split('\n'):
         if '------' in line:
             doc = {}
+            doc['doc_type'] = doc_type
             doc['device_name'] = device_name
             doc['device_ip'] = device_ip
             doc['protocol'] = 'cdp'
@@ -74,6 +76,7 @@ def neighbour(config_data):
     for line in output.split('\n'):
         if 'Chassis' in line:
             doc = {}
+            doc['doc_type'] = doc_type
             doc['device_name'] = device_name
             doc['device_ip'] = device_ip
             doc['protocol'] = 'lldp'

@@ -1,6 +1,3 @@
-import os
-import time
-import netmiko
 from pprint import pprint
 
 # Collector must contain collect_data function.
@@ -11,10 +8,15 @@ def inventory(config_data):
     docs = []
     doc = {}
     msgs = []
+    doc_type = 'inventory'
     device_name = config_data["hostname"]
     device_ip = config_data["hostip"]
+    netmiko_device_type = config_data["netmiko_device_type"]
+    # Create elastic document
+    doc['doc_type'] = doc_type
     doc['device_name'] = device_name
     doc['device_ip'] = device_ip
+    doc['netmiko_device_type'] = netmiko_device_type
     docs.append(doc)
     return {'elastic_docs': docs, 'debug_msgs': msgs}
         

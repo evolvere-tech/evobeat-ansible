@@ -128,12 +128,12 @@ class basebeat(object):
                         self.msgs.append(msg)
                     msg = f'INFO: Document POSTed with id {result["_id"]}, to index {self.elastic_index}.'
                     self.msgs.append(msg)
-                #else:
-                #    # Docs found, so update
-                #    doc_id = query["hits"]["hits"][0]["_id"]
-                #    result = self.es.index(index=self.elastic_index, id=doc_id, body=doc)
-                #    msg = f'INFO: Document with id {result["_id"]}, in index {self.elastic_index} updated.'
-                #    self.msgs.append(msg)
+                else:
+                    # Docs found, so update
+                    doc_id = query["hits"]["hits"][0]["_id"]
+                    result = self.es.index(index=self.elastic_index, id=doc_id, body=doc)
+                    msg = f'INFO: Document with id {result["_id"]}, in index {self.elastic_index} updated.'
+                    self.msgs.append(msg)
         else:
             # POST timeseries data
             if self.elastic_index_rotate == 'daily':
