@@ -4,20 +4,20 @@ all:
     localhost:
       vars:
         ansible_connection: local
-        ansible_python_interpreter: /usr/bin/python3
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
     ukgrnfab1:
       ansible_host: 192.168.104.10
       ansible_user: admin
       ansible_password: f00tba11
-      ansible_connection: local
+      #ansible_connection: local
       netmiko_device_type: unknown
 
-    evo-eos01:
-      ansible_host: 192.168.10.160
-      ansible_user: admin
-      ansible_password: admin
-      ansible_connection: local
-      netmiko_device_type: arista_eos
+    #evo-eos01:
+    #  ansible_host: 192.168.10.160
+    #  ansible_user: admin
+    #  ansible_password: admin
+    #  ansible_connection: local
+    #  netmiko_device_type: arista_eos
 
     #evo-eos02:
     #  ansible_host: 192.168.10.189

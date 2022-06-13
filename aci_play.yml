@@ -1,5 +1,5 @@
 - name: evobeat data collector
-  hosts: ukgrnfab1
+  hosts: all
   gather_facts: no
   tasks:
     - name: Collect ACI size metrics
