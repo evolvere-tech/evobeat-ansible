@@ -1,6 +1,7 @@
 - name: evobeat data collector
   hosts: all
   gather_facts: no
+  connection: local
   tasks:
     - name: Collect ACI size metrics
       evobeat:
