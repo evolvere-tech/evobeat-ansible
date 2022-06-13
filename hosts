@@ -1,6 +1,10 @@
 ---
 all:
   hosts:
+    localhost:
+      vars:
+        ansible_connection: local
+        ansible_python_interpreter: /usr/bin/python3
     ukgrnfab1:
       ansible_host: 192.168.104.10
       ansible_user: admin
@@ -22,4 +26,4 @@ all:
     #  ansible_connection: local
     #  netmiko_device_type: arista_eos
   vars:
-    ansible_python_interpreter: /home/evolvere/git-clone/evobeat-ansible/venv/bin/python3
+    ansible_python_interpreter: /usr/bin/python3
