@@ -15,11 +15,11 @@
         hostname: '{{ inventory_hostname }}'
         username: '{{ ansible_user }}'
         password: '{{ ansible_password }}'
-        debug: True
+        debug: no
       register: result
       delegate_to: localhost
       #no_log: true
 
-    - name : Print result
-      debug:
-        msg: "{{ result }}"
+    #- name : Print result
+    #  debug:
+    #    msg: "{{ result }}"

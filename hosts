@@ -1,10 +1,10 @@
 ---
 all:
   hosts:
-    localhost:
-      vars:
-        ansible_connection: local
-        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    #localhost:
+    #  vars:
+    #    ansible_connection: local
+    #    ansible_python_interpreter: "{{ ansible_playbook_python }}"
     ukgrnfab1:
       ansible_host: 192.168.104.10
       ansible_user: admin
