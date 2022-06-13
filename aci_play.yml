@@ -5,7 +5,7 @@
   tasks:
     - name: Collect ACI size metrics
       evobeat:
-        mode: 'test'
+        mode: 'run'
         elastic_host: 'elastic.default.192.168.10.120.nip.io'
         elastic_index: 'test-evobeat'
         elastic_username: 'evolvere'
